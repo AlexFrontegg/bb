@@ -52,6 +52,7 @@ import {
   environmentDiffFilesQueryKeyPrefix,
   environmentFilePreviewQueryKeyPrefix,
   environmentPullRequestQueryKey,
+  threadCreatedPullRequestsQueryKey,
   environmentWorkStatusQueryKeyPrefix,
   hostsQueryKey,
   serverMoveStatusQueryKey,
@@ -914,7 +915,10 @@ function dirtyThreadPullRequestQueryForCompletedTurn({
       (thread) => thread.id === threadId,
     );
   const environmentId = cachedThread?.environmentId;
-  return environmentId ? [environmentPullRequestQueryKey(environmentId)] : [];
+  return [
+    threadCreatedPullRequestsQueryKey(threadId),
+    ...(environmentId ? [environmentPullRequestQueryKey(environmentId)] : []),
+  ];
 }
 
 function dirtyThreadTerminalQueries({

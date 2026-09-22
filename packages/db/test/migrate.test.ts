@@ -1761,6 +1761,7 @@ describe("migrate", () => {
         showKeyboardHints: false,
         steerActiveThreadOnEnter: true,
         confirmThreadArchive: true,
+        showAllThreadPullRequests: false,
         showDiagnosticEvents: true,
         providerOrder: [],
         defaultProviderId: null,

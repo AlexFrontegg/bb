@@ -66,6 +66,7 @@ import {
   getLastThreadOutput,
   listThreadEventRows,
 } from "../../services/threads/thread-data.js";
+import { listThreadCreatedPullRequests } from "../../services/threads/thread-created-pull-requests.js";
 import { listThreadPromptHistory } from "../../services/prompt-history.js";
 import { tryResolveExistingThreadExecutionPlan } from "../../services/threads/thread-execution-plan.js";
 import {
@@ -354,6 +355,13 @@ export function registerThreadDataRoutes(app: Hono, deps: AppDeps): void {
     return context.json(
       delta === undefined ? full : { ...full, rows: [], delta },
     );
+  });
+
+  get(routes.createdPullRequests, (context) => {
+    const thread = requirePublicThread(deps.db, context.req.param("id"));
+    return context.json({
+      pullRequests: listThreadCreatedPullRequests(deps.db, thread.id),
+    });
   });
 
   get(routes.conversationOutline, (context) => {

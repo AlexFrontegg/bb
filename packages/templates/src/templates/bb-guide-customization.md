@@ -129,6 +129,12 @@ child threads without the confirmation popup. The toast still offers Undo.
 The setting applies to all connected app clients; CLI and SDK archive calls
 remain non-interactive.
 
+Settings → General also includes `showAllThreadPullRequests`, which defaults to
+false. Turn it on to list every pull request a thread's agent created, in any
+repository, in the prompt box banner; while it is off the banner shows only the
+pull request for the checked-out branch. Set it with
+`bb settings general showAllThreadPullRequests <true|false>`.
+
 Settings → General also includes `streamerMode`, which defaults to false. Turn
 it on to hide every `customModels` entry from `~/.bb/config.json` in all model
 lists (pickers, `bb provider models`, and the SDK) during a screen share. The

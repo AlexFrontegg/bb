@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ThreadPullRequest } from "@bb/domain";
@@ -8,6 +8,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   isThreadDisplayStatusBannerActive,
   ThreadPromptContextBanner,
+  type ThreadPromptContextBannerExpandedSection,
+  type ThreadPromptCreatedPullRequestsSection,
   type ThreadPromptGitSection,
 } from "./ThreadPromptContextBanner";
 
@@ -724,5 +726,209 @@ describe("ThreadPromptContextBanner git section body", () => {
 
     rerender(renderBanner(null));
     expect(screen.getByRole("list", { hidden: true })).toBeTruthy();
+  });
+});
+
+const createdPullRequestsFixture: ThreadPromptCreatedPullRequestsSection = {
+  pullRequests: [
+    {
+      repo: "acme/infra",
+      number: 7,
+      url: "https://github.com/acme/infra/pull/7",
+      seq: 3,
+    },
+    {
+      repo: "acme/bb",
+      number: 128,
+      url: "https://github.com/acme/bb/pull/128",
+      seq: 1,
+    },
+    {
+      repo: "acme/docs",
+      number: 12,
+      url: "https://github.com/acme/docs/pull/12",
+      seq: 2,
+    },
+    {
+      repo: "acme/api",
+      number: 5,
+      url: "https://github.com/acme/api/pull/5",
+      seq: 4,
+    },
+  ],
+};
+
+const THREAD_PULL_REQUESTS_TOGGLE_NAME = "3 more PRs created by this thread";
+
+describe("ThreadPromptContextBanner thread pull requests", () => {
+  function renderBanner(
+    overrides: {
+      createdPullRequestsSection?: ThreadPromptCreatedPullRequestsSection;
+      showAllThreadPullRequests?: boolean;
+      pullRequest?: ThreadPullRequest | null;
+      expandedSection?: ThreadPromptContextBannerExpandedSection | null;
+    } = {},
+  ) {
+    const { pullRequest = pullRequestFixture, ...bannerOverrides } = overrides;
+    return (
+      <MemoryRouter>
+        <ThreadPromptContextBanner
+          gitSection={makeGitSection("uncommitted")}
+          gitSectionPending={false}
+          archivedSection={null}
+          environmentGoneSection={null}
+          parentThreadSection={null}
+          childThreadsSection={null}
+          pullRequestSection={pullRequest ? { pullRequest } : null}
+          expandedSection={null}
+          onToggleSection={noop}
+          {...bannerOverrides}
+        />
+      </MemoryRouter>
+    );
+  }
+
+  function renderThreadPullRequests(
+    overrides: {
+      pullRequest?: ThreadPullRequest | null;
+      expandedSection?: ThreadPromptContextBannerExpandedSection | null;
+    } = {},
+  ) {
+    return render(
+      renderBanner({
+        createdPullRequestsSection: createdPullRequestsFixture,
+        showAllThreadPullRequests: true,
+        ...overrides,
+      }),
+    );
+  }
+
+  it("renders exactly the default banner while the setting is off", () => {
+    const baseline = renderToStaticMarkup(renderBanner());
+
+    expect(
+      renderToStaticMarkup(
+        renderBanner({
+          createdPullRequestsSection: createdPullRequestsFixture,
+        }),
+      ),
+    ).toBe(baseline);
+    expect(
+      renderToStaticMarkup(
+        renderBanner({
+          createdPullRequestsSection: createdPullRequestsFixture,
+          showAllThreadPullRequests: false,
+        }),
+      ),
+    ).toBe(baseline);
+  });
+
+  it("keeps the default banner when the thread only created the branch pull request", () => {
+    const onlyBranchPullRequest: ThreadPromptCreatedPullRequestsSection = {
+      pullRequests: [createdPullRequestsFixture.pullRequests[1]!],
+    };
+
+    expect(
+      renderToStaticMarkup(
+        renderBanner({
+          createdPullRequestsSection: onlyBranchPullRequest,
+          showAllThreadPullRequests: true,
+        }),
+      ),
+    ).toBe(renderToStaticMarkup(renderBanner()));
+  });
+
+  it("counts only the pull requests the branch chip does not already show", () => {
+    renderThreadPullRequests();
+
+    expect(
+      screen.getByRole("button", { name: THREAD_PULL_REQUESTS_TOGGLE_NAME }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("link", { name: "Pull request acme/bb#128" }),
+    ).toBeNull();
+  });
+
+  it("keeps the branch pull request number visible beside thread pull requests", () => {
+    renderThreadPullRequests();
+
+    expect(
+      screen.getByRole("link", { name: /Pull request 128:/ }).textContent,
+    ).toContain("PR #128");
+  });
+
+  it("drops the repository owner from inline chips but keeps it in the title", () => {
+    renderThreadPullRequests();
+
+    const chip = screen.getByRole("link", {
+      name: "Pull request acme/docs#12",
+    });
+    expect(chip.textContent).toBe("docs#12");
+    expect(chip.querySelector("span")?.title).toBe("acme/docs#12");
+  });
+
+  it("collapses the inline chips without measuring the viewport", () => {
+    const markup = renderToStaticMarkup(
+      renderBanner({
+        createdPullRequestsSection: createdPullRequestsFixture,
+        showAllThreadPullRequests: true,
+      }),
+    );
+
+    expect(markup).toContain('data-promptbox-hide-compact=""><li');
+    expect(markup).toContain('data-promptbox-compact-label="">3<');
+  });
+
+  it("expands thread pull requests in place in creation order", () => {
+    renderThreadPullRequests({ expandedSection: "pullRequests" });
+
+    const body = screen.getByRole("region", {
+      name: THREAD_PULL_REQUESTS_TOGGLE_NAME,
+    });
+    expect(
+      within(body)
+        .getAllByRole("link")
+        .map((link) => link.textContent),
+    ).toEqual(["acme/docs#12", "acme/infra#7", "acme/api#5"]);
+    expect(screen.queryAllByRole("menuitem")).toEqual([]);
+  });
+
+  it("lists thread pull requests without inventing status for them", () => {
+    renderThreadPullRequests({ expandedSection: "pullRequests" });
+
+    const body = screen.getByRole("region", {
+      name: THREAD_PULL_REQUESTS_TOGGLE_NAME,
+    });
+    for (const link of within(body).getAllByRole("link")) {
+      expect(link.querySelector("[data-icon]")).toBeNull();
+      expect(link.querySelector("img")).toBeNull();
+    }
+  });
+
+  it("does not mount the thread pull request list until it first expands", () => {
+    const { rerender } = renderThreadPullRequests();
+    expect(
+      screen.queryByRole("link", { name: "Pull request acme/api#5" }),
+    ).toBeNull();
+
+    rerender(
+      renderBanner({
+        createdPullRequestsSection: createdPullRequestsFixture,
+        showAllThreadPullRequests: true,
+        expandedSection: "pullRequests",
+      }),
+    );
+    expect(
+      screen.getByRole("link", { name: "Pull request acme/api#5" }),
+    ).toBeTruthy();
+  });
+
+  it("surfaces thread pull requests when no pull request tracks the branch", () => {
+    renderThreadPullRequests({ pullRequest: null });
+
+    const toggle = screen.getByRole("button", {
+      name: "4 PRs created by this thread",
+    });
+    expect(toggle.textContent).toContain("+2 more");
   });
 });

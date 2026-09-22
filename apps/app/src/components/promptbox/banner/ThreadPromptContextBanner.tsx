@@ -12,6 +12,7 @@ import { NavLink } from "react-router-dom";
 import type {
   EnvironmentStatus,
   GitBranchRefClassification,
+  ThreadCreatedPullRequest,
   ThreadPullRequest,
   ThreadRuntimeDisplayStatus,
 } from "@bb/domain";
@@ -113,6 +114,10 @@ export interface ThreadPromptPullRequestSection {
   };
 }
 
+export interface ThreadPromptCreatedPullRequestsSection {
+  pullRequests: readonly ThreadCreatedPullRequest[];
+}
+
 export interface ThreadPromptArchivedSection {
   archivedAt: number;
   onUnarchive?: () => void;
@@ -138,7 +143,8 @@ export type ThreadPromptContextBannerExpandedSection =
   | "git"
   | "parentThread"
   | "childThreads"
-  | "status";
+  | "status"
+  | "pullRequests";
 
 interface ThreadPromptContextBannerProps {
   gitSection: ThreadPromptGitSection | null;
@@ -148,6 +154,8 @@ interface ThreadPromptContextBannerProps {
   parentThreadSection: ThreadPromptParentThreadSection | null;
   childThreadsSection: ThreadPromptChildThreadsSection | null;
   pullRequestSection: ThreadPromptPullRequestSection | null;
+  createdPullRequestsSection?: ThreadPromptCreatedPullRequestsSection | null;
+  showAllThreadPullRequests?: boolean;
   expandedSection: ThreadPromptContextBannerExpandedSection | null;
   onToggleSection: (section: ThreadPromptContextBannerExpandedSection) => void;
 }
@@ -191,6 +199,10 @@ const SECTION_IDS = {
     toggle: "thread-prompt-banner-child-threads-toggle",
     body: "thread-prompt-banner-child-threads-body",
   },
+  pullRequests: {
+    toggle: "thread-prompt-banner-pull-requests-toggle",
+    body: "thread-prompt-banner-pull-requests-body",
+  },
   git: {
     toggle: "thread-prompt-banner-git-toggle",
     body: "thread-prompt-banner-git-body",
@@ -200,6 +212,8 @@ const SECTION_IDS = {
     body: "thread-prompt-banner-status-body",
   },
 } as const;
+
+const INLINE_CREATED_PULL_REQUEST_LIMIT = 2;
 
 const SEGMENT_SHRINK_CLASS = "min-w-0 overflow-hidden";
 
@@ -236,6 +250,9 @@ function SectionToggleButton({
   isExpanded,
   onToggle,
 }: SectionToggleButtonProps) {
+  const hasVisibleLabel =
+    (label !== null && label !== undefined) ||
+    (hideLabelInCompact && compactLabel !== null && compactLabel !== undefined);
   return (
     <button
       type="button"
@@ -248,7 +265,7 @@ function SectionToggleButton({
         CONTEXT_CARD_TOGGLE_CLASS,
         PROMPT_STACK_INLAY_SEGMENT_CLASS,
         SEGMENT_SHRINK_CLASS,
-        label !== null && label !== undefined ? "gap-1.5" : "gap-0",
+        hasVisibleLabel ? "gap-1.5" : "gap-0",
         isExpanded ? "text-foreground" : "text-muted-foreground",
       )}
     >
@@ -637,6 +654,102 @@ function PullRequestBannerLink({
   );
 }
 
+function createdPullRequestLabel(
+  pullRequest: ThreadCreatedPullRequest,
+): string {
+  return `${pullRequest.repo}#${pullRequest.number}`;
+}
+
+function createdPullRequestShortLabel(
+  pullRequest: ThreadCreatedPullRequest,
+): string {
+  const repoName = pullRequest.repo.slice(pullRequest.repo.indexOf("/") + 1);
+  return `${repoName}#${pullRequest.number}`;
+}
+
+function createdPullRequestsCountLabel(args: {
+  count: number;
+  hasBranchPullRequest: boolean;
+}): string {
+  const noun = args.count === 1 ? "PR" : "PRs";
+  return args.hasBranchPullRequest
+    ? `${args.count} more ${noun}`
+    : `${args.count} ${noun}`;
+}
+
+function CreatedPullRequestLink({
+  className,
+  label,
+  pullRequest,
+}: {
+  className: string;
+  label: string;
+  pullRequest: ThreadCreatedPullRequest;
+}) {
+  const fullLabel = createdPullRequestLabel(pullRequest);
+  const handleClick = useUrlAnchorClickHandler(pullRequest.url);
+  return (
+    <a
+      href={pullRequest.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={handleClick}
+      aria-label={`Pull request ${fullLabel}`}
+      className={className}
+    >
+      <span className="block truncate" title={fullLabel}>
+        {label}
+      </span>
+    </a>
+  );
+}
+
+function CreatedPullRequestChips({
+  pullRequests,
+}: {
+  pullRequests: readonly ThreadCreatedPullRequest[];
+}) {
+  return (
+    <ul
+      className={cn("flex items-center gap-0.5", SEGMENT_SHRINK_CLASS)}
+      data-promptbox-hide-compact=""
+    >
+      {pullRequests.map((pullRequest) => (
+        <li key={pullRequest.url} className={SEGMENT_SHRINK_CLASS}>
+          <CreatedPullRequestLink
+            pullRequest={pullRequest}
+            label={createdPullRequestShortLabel(pullRequest)}
+            className={cn(
+              "block text-xs text-muted-foreground no-underline transition-colors hover:bg-state-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+              PROMPT_STACK_INLAY_SEGMENT_CLASS,
+            )}
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function CreatedPullRequestsBody({
+  pullRequests,
+}: {
+  pullRequests: readonly ThreadCreatedPullRequest[];
+}) {
+  return (
+    <ul className="max-h-40 space-y-0.5 overflow-y-auto px-3 pb-2 pt-1.5">
+      {pullRequests.map((pullRequest) => (
+        <li key={pullRequest.url} className="text-xs">
+          <CreatedPullRequestLink
+            pullRequest={pullRequest}
+            label={createdPullRequestLabel(pullRequest)}
+            className="block py-0.5 text-foreground/90 no-underline underline-offset-2 hover:underline"
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function childThreadsLabel(args: {
   count: number;
   pendingCount: number;
@@ -847,6 +960,8 @@ export function ThreadPromptContextBanner({
   parentThreadSection,
   childThreadsSection,
   pullRequestSection,
+  createdPullRequestsSection = null,
+  showAllThreadPullRequests = false,
   expandedSection,
   onToggleSection,
 }: ThreadPromptContextBannerProps) {
@@ -891,15 +1006,36 @@ export function ThreadPromptContextBanner({
   const showChildThreads =
     childThreadsSection !== null && childThreadsSection.items.length > 0;
   const showPullRequest = pullRequestSection !== null;
-  if (!showGit && !showParentThread && !showChildThreads && !showPullRequest) {
+  const pullRequest = pullRequestSection?.pullRequest ?? null;
+  const otherCreatedPullRequests = showAllThreadPullRequests
+    ? [...(createdPullRequestsSection?.pullRequests ?? [])]
+        .filter((created) => created.url !== pullRequest?.url)
+        .sort((left, right) => left.seq - right.seq)
+    : [];
+  const showCreatedPullRequests = otherCreatedPullRequests.length > 0;
+  if (
+    !showGit &&
+    !showParentThread &&
+    !showChildThreads &&
+    !showPullRequest &&
+    !showCreatedPullRequests
+  ) {
     return null;
   }
-  const visibleSegmentCount =
+  const segmentCountWithoutCreatedPullRequests =
     Number(showParentThread) + Number(showPullRequest) + Number(showGit);
+  const visibleSegmentCount =
+    segmentCountWithoutCreatedPullRequests + Number(showCreatedPullRequests);
   const hasSingleVisibleSegment = visibleSegmentCount === 1;
-  const isPullRequestAndGitOnly =
-    showPullRequest && showGit && visibleSegmentCount === 2;
+  const inlineCreatedPullRequests = otherCreatedPullRequests.slice(
+    0,
+    INLINE_CREATED_PULL_REQUEST_LIMIT,
+  );
+  const hiddenCreatedPullRequestCount =
+    otherCreatedPullRequests.length - inlineCreatedPullRequests.length;
   const isGitExpanded = expandedSection === "git" && showGit;
+  const isCreatedPullRequestsExpanded =
+    expandedSection === "pullRequests" && showCreatedPullRequests;
   const isParentThreadExpanded =
     expandedSection === "parentThread" && showParentThread;
   const isChildThreadsExpanded =
@@ -963,9 +1099,10 @@ export function ThreadPromptContextBanner({
 
   const isParentThreadOnly = showParentThread && !showGit && !showPullRequest;
 
-  const pullRequest = pullRequestSection?.pullRequest ?? null;
   const showPullRequestLabel =
-    hasSingleVisibleSegment || isPullRequestAndGitOnly;
+    showPullRequest &&
+    (segmentCountWithoutCreatedPullRequests === 1 ||
+      (showGit && segmentCountWithoutCreatedPullRequests === 2));
   const pullRequestActions = pullRequestSection?.actions;
   const pullRequestAction =
     pullRequest && pullRequestActions ? (
@@ -1023,6 +1160,36 @@ export function ThreadPromptContextBanner({
               showStateLabel={hasSingleVisibleSegment}
             />
           ) : null}
+          {showCreatedPullRequests ? (
+            <>
+              <CreatedPullRequestChips
+                pullRequests={inlineCreatedPullRequests}
+              />
+              <SectionToggleButton
+                id={SECTION_IDS.pullRequests.toggle}
+                controlsId={SECTION_IDS.pullRequests.body}
+                ariaLabel={`${createdPullRequestsCountLabel({
+                  count: otherCreatedPullRequests.length,
+                  hasBranchPullRequest: showPullRequest,
+                })} created by this thread`}
+                icon={
+                  <Icon
+                    name="GitPullRequestArrow"
+                    className="size-3.5 shrink-0"
+                    aria-hidden="true"
+                  />
+                }
+                label={
+                  hiddenCreatedPullRequestCount > 0
+                    ? `+${hiddenCreatedPullRequestCount} more`
+                    : null
+                }
+                compactLabel={otherCreatedPullRequests.length}
+                isExpanded={isCreatedPullRequestsExpanded}
+                onToggle={() => onToggleSection("pullRequests")}
+              />
+            </>
+          ) : null}
           {showGit && gitSummary ? (
             <SectionToggleButton
               id={SECTION_IDS.git.toggle}
@@ -1050,6 +1217,16 @@ export function ThreadPromptContextBanner({
             section={parentThreadSection}
             isExpanded={isParentThreadExpanded}
           />
+        ) : null}
+        {showCreatedPullRequests ? (
+          <AnimatedBody
+            collapsedBorder="reserve"
+            id={SECTION_IDS.pullRequests.body}
+            labelledBy={SECTION_IDS.pullRequests.toggle}
+            isExpanded={isCreatedPullRequestsExpanded}
+          >
+            <CreatedPullRequestsBody pullRequests={otherCreatedPullRequests} />
+          </AnimatedBody>
         ) : null}
         {showGit ? (
           <AnimatedBody

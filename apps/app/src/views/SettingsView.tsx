@@ -179,10 +179,12 @@ interface GeneralSettingsSectionProps {
   onOpenLinksInAppBrowserChange: (enabled: boolean) => void;
   onRewriteLocalhostLinksChange: (enabled: boolean) => void;
   onRichTextEditingChange: (enabled: boolean) => void;
+  onShowAllThreadPullRequestsChange: (enabled: boolean) => void;
   onSteerActiveThreadOnEnterChange: (enabled: boolean) => void;
   openLinksInAppBrowser: boolean;
   rewriteLocalhostLinks: boolean;
   richTextEditing: boolean;
+  showAllThreadPullRequests: boolean;
   steerActiveThreadOnEnter: boolean;
 }
 
@@ -586,6 +588,8 @@ const NAVIGATE_TO_THREAD_AFTER_CREATE_SETTING_LABEL =
   "Navigate to threads on creation";
 const RICH_TEXT_EDITING_SETTING_LABEL = "Markdown formatting in prompt box";
 const DIAGNOSTIC_EVENTS_SETTING_LABEL = "Show diagnostic events";
+const ALL_THREAD_PULL_REQUESTS_SETTING_LABEL =
+  "Show all pull requests from this thread";
 const FOLLOW_UP_BEHAVIOR_SETTING_LABEL = "Default thread followup behavior";
 const FOLLOW_UP_BEHAVIOR_OPTIONS = [
   {
@@ -862,10 +866,12 @@ export function GeneralSettingsSection({
   onOpenLinksInAppBrowserChange,
   onRewriteLocalhostLinksChange,
   onRichTextEditingChange,
+  onShowAllThreadPullRequestsChange,
   onSteerActiveThreadOnEnterChange,
   openLinksInAppBrowser,
   rewriteLocalhostLinks,
   richTextEditing,
+  showAllThreadPullRequests,
   steerActiveThreadOnEnter,
 }: GeneralSettingsSectionProps) {
   const localhostRewriteDescription = localhostLinkRewriteDescription(
@@ -944,6 +950,18 @@ export function GeneralSettingsSection({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+          </SettingsWithControl>
+
+          <SettingsWithControl
+            label={ALL_THREAD_PULL_REQUESTS_SETTING_LABEL}
+            description="List every pull request this thread's agent created, in any repository, instead of only the one on the branch you have checked out."
+          >
+            <Switch
+              checked={showAllThreadPullRequests}
+              disabled={generalSettingsDisabled}
+              onCheckedChange={onShowAllThreadPullRequestsChange}
+              aria-label={ALL_THREAD_PULL_REQUESTS_SETTING_LABEL}
+            />
           </SettingsWithControl>
 
           <SettingsWithControl
@@ -1306,11 +1324,18 @@ export function SettingsView() {
           openLinksInAppBrowser={openLinksInAppBrowser}
           rewriteLocalhostLinks={rewriteLocalhostLinks}
           richTextEditing={richTextEditing}
+          showAllThreadPullRequests={generalSettings.showAllThreadPullRequests}
           steerActiveThreadOnEnter={generalSettings.steerActiveThreadOnEnter}
           onNavigateToThreadAfterCreateChange={setNavigateToThreadAfterCreate}
           onOpenLinksInAppBrowserChange={setOpenLinksInAppBrowser}
           onRewriteLocalhostLinksChange={setRewriteLocalhostLinks}
           onRichTextEditingChange={setRichTextEditing}
+          onShowAllThreadPullRequestsChange={(enabled) =>
+            updateGeneralSettingsMutation.mutate({
+              ...generalSettings,
+              showAllThreadPullRequests: enabled,
+            })
+          }
           onSteerActiveThreadOnEnterChange={(enabled) =>
             updateGeneralSettingsMutation.mutate({
               ...generalSettings,

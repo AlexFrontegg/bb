@@ -120,6 +120,14 @@ so they carry over between navigation plugins.
   applies to all connected app clients. CLI and SDK archive calls remain
   non-interactive.
 
+## Thread pull requests
+
+- `showAllThreadPullRequests` defaults to false. Set it with
+  `bb settings general showAllThreadPullRequests <true|false|on|off>`.
+- When enabled, the prompt box banner lists every pull request the thread's
+  agent created, including ones in other repositories. When disabled, the
+  banner shows only the pull request for the branch that is checked out.
+
 ## Streamer mode
 
 - `streamerMode` defaults to false. Set it with

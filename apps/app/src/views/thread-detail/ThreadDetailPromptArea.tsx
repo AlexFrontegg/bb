@@ -18,7 +18,7 @@ import {
   getFollowUpPromptPlaceholder,
   getCompactFollowUpPromptPlaceholder,
 } from "@/components/promptbox/follow-up-placeholder";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
+import { PERSONAL_PROJECT_ID, defaultAppSettings } from "@bb/domain";
 import type {
   PermissionMode,
   ReasoningLevel,
@@ -66,6 +66,7 @@ import {
   type ThreadPromptParentThreadSection,
   type ThreadPromptChildThreadsSection,
   type ThreadPromptPullRequestSection,
+  type ThreadPromptCreatedPullRequestsSection,
 } from "@/components/promptbox/banner/ThreadPromptContextBanner";
 import { ThreadGoalCard } from "@/components/promptbox/banner/ThreadGoalCard";
 import { ThreadTodoCard } from "@/components/promptbox/banner/ThreadTodoCard";
@@ -119,7 +120,9 @@ import {
   getLatestPendingInteraction,
   useThreadQueuedMessages,
   useThreadPromptHistory,
+  useThreadCreatedPullRequests,
 } from "@/hooks/queries/thread-queries";
+import { useSystemConfig } from "@/hooks/queries/system-queries";
 import { useThreadDefaultExecutionOptions } from "@/hooks/queries/thread-default-execution-options-query";
 import {
   getMutationErrorMessage,
@@ -638,6 +641,20 @@ export function ThreadDetailPromptArea({
       pullRequest,
       pullRequestMergeMethod,
     ]);
+  const systemConfig = useSystemConfig();
+  const showAllThreadPullRequests =
+    systemConfig.data?.generalSettings?.showAllThreadPullRequests ??
+    defaultAppSettings.showAllThreadPullRequests;
+  const createdPullRequestsQuery = useThreadCreatedPullRequests(thread.id, {
+    enabled: showAllThreadPullRequests,
+  });
+  const createdPullRequests = createdPullRequestsQuery.data?.pullRequests;
+  const createdPullRequestsSection =
+    useMemo<ThreadPromptCreatedPullRequestsSection | null>(
+      () =>
+        createdPullRequests ? { pullRequests: createdPullRequests } : null,
+      [createdPullRequests],
+    );
   const [isGoalExpanded, setIsGoalExpanded] = useState(false);
   const [isTodoExpanded, setIsTodoExpanded] = useState(false);
   const [isPromptModeExpanded, setIsPromptModeExpanded] = useState(false);
@@ -2167,6 +2184,8 @@ export function ThreadDetailPromptArea({
           parentThreadSection={parentThreadSection}
           childThreadsSection={childThreadsSection}
           pullRequestSection={pullRequestSection}
+          createdPullRequestsSection={createdPullRequestsSection}
+          showAllThreadPullRequests={showAllThreadPullRequests}
           gitSection={
             workspaceChangedFilesSection
               ? {
@@ -2250,6 +2269,8 @@ export function ThreadDetailPromptArea({
       parentThreadSection,
       childThreadsSection,
       pullRequestSection,
+      createdPullRequestsSection,
+      showAllThreadPullRequests,
       pendingTodos,
       displayedProcessingQueuedMessage,
       queuedMessageCount,

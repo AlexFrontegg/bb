@@ -53,6 +53,7 @@ const ENVIRONMENT_FILE_PREVIEW_QUERY_KEY = "environmentFilePreview";
 const ENVIRONMENT_PATHS_QUERY_KEY = "environmentPaths";
 export const THREAD_TIMELINE_QUERY_KEY = "threadTimeline";
 const THREAD_CONVERSATION_OUTLINE_QUERY_KEY = "threadConversationOutline";
+const THREAD_CREATED_PULL_REQUESTS_QUERY_KEY = "threadCreatedPullRequests";
 const THREAD_TIMELINE_TURN_SUMMARY_DETAILS_QUERY_KEY =
   "threadTimelineTurnSummaryDetails";
 const SYSTEM_PROVIDERS_QUERY_KEY = "systemProviders";
@@ -357,6 +358,13 @@ type ThreadConversationOutlineQueryKeyPrefix = readonly [
 ];
 type AllThreadConversationOutlineQueryKeyPrefix = readonly [
   typeof THREAD_CONVERSATION_OUTLINE_QUERY_KEY,
+];
+type ThreadCreatedPullRequestsQueryKey = readonly [
+  typeof THREAD_CREATED_PULL_REQUESTS_QUERY_KEY,
+  string,
+];
+type AllThreadCreatedPullRequestsQueryKeyPrefix = readonly [
+  typeof THREAD_CREATED_PULL_REQUESTS_QUERY_KEY,
 ];
 export interface ThreadTimelineTurnSummaryDetailsQueryIdentity {
   sourceSeqEnd: number;
@@ -939,6 +947,16 @@ export function threadConversationOutlineQueryKeyPrefix(
 
 export function allThreadConversationOutlineQueryKeyPrefix(): AllThreadConversationOutlineQueryKeyPrefix {
   return [THREAD_CONVERSATION_OUTLINE_QUERY_KEY];
+}
+
+export function threadCreatedPullRequestsQueryKey(
+  threadId: string,
+): ThreadCreatedPullRequestsQueryKey {
+  return [THREAD_CREATED_PULL_REQUESTS_QUERY_KEY, threadId];
+}
+
+export function allThreadCreatedPullRequestsQueryKeyPrefix(): AllThreadCreatedPullRequestsQueryKeyPrefix {
+  return [THREAD_CREATED_PULL_REQUESTS_QUERY_KEY];
 }
 
 export function threadTimelineTurnSummaryDetailsQueryKey({

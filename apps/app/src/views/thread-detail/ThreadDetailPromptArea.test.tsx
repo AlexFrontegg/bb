@@ -748,6 +748,7 @@ vi.mock("@/hooks/queries/thread-queries", () => ({
     mocks.useThreadQueuedMessages(threadId, options);
     return { data: mocks.queuedMessages };
   },
+  useThreadCreatedPullRequests: () => ({ data: undefined }),
 }));
 
 function makeQueuedMessage(

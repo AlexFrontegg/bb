@@ -13,6 +13,7 @@ import {
   type ThreadPromptEnvironmentGoneSection,
   type ThreadPromptParentThreadSection,
   type ThreadPromptChildThreadsSection,
+  type ThreadPromptCreatedPullRequestsSection,
 } from "@/components/promptbox/banner/ThreadPromptContextBanner";
 import {
   selectWorkspaceChangedFilesSection,
@@ -483,6 +484,35 @@ const mergedPullRequestFixture = buildPullRequestFixture({
   attention: "merged",
 });
 
+const threadPullRequestsFixture: ThreadPromptCreatedPullRequestsSection = {
+  pullRequests: [
+    {
+      repo: "acme/bb",
+      number: 128,
+      url: "https://github.com/acme/bb/pull/128",
+      seq: 1,
+    },
+    {
+      repo: "acme/docs",
+      number: 12,
+      url: "https://github.com/acme/docs/pull/12",
+      seq: 2,
+    },
+    {
+      repo: "acme/infra",
+      number: 7,
+      url: "https://github.com/acme/infra/pull/7",
+      seq: 3,
+    },
+    {
+      repo: "acme/api",
+      number: 5,
+      url: "https://github.com/acme/api/pull/5",
+      seq: 4,
+    },
+  ],
+};
+
 const pullRequestStateRows: readonly {
   label: string;
   hint: string;
@@ -626,6 +656,8 @@ interface RowConfig {
   pullRequest?: ThreadPullRequest | null;
   pullRequestActions?: boolean;
   pullRequestMergeMethod?: PullRequestMergeMethod;
+  createdPullRequests?: ThreadPromptCreatedPullRequestsSection | null;
+  showAllThreadPullRequests?: boolean;
   initiallyExpandedSection?: ThreadPromptContextBannerExpandedSection | null;
 }
 
@@ -639,6 +671,8 @@ function ContextBannerPreview({
   pullRequest = null,
   pullRequestActions = false,
   pullRequestMergeMethod = "merge",
+  createdPullRequests = null,
+  showAllThreadPullRequests = false,
   initiallyExpandedSection = null,
   size,
 }: RowConfig & { size: PromptStageSize }) {
@@ -679,6 +713,8 @@ function ContextBannerPreview({
               }
             : null
         }
+        createdPullRequestsSection={createdPullRequests}
+        showAllThreadPullRequests={showAllThreadPullRequests}
         expandedSection={expandedSection}
         onToggleSection={(next) =>
           setExpandedSection((previous) => (previous === next ? null : next))
@@ -889,6 +925,49 @@ export function Overview() {
           pullRequestActions
           pullRequestMergeMethod="squash"
           section={committedManySection}
+        />
+      </StoryRow>
+      <StoryRow
+        label="thread pull requests — setting off"
+        hint="showAllThreadPullRequests is off, so three thread pull requests change nothing: only the branch PR chip renders"
+      >
+        <Row
+          pullRequest={pullRequestFixture}
+          section={uncommittedSection}
+          createdPullRequests={threadPullRequestsFixture}
+        />
+      </StoryRow>
+      <StoryRow
+        label="thread pull requests — setting on, four repos"
+        hint="the branch PR keeps its own chip and is excluded from the rest; the first extras render as inline chips without their owner, and the overflow collapses into one count chip"
+      >
+        <Row
+          pullRequest={pullRequestFixture}
+          section={uncommittedSection}
+          createdPullRequests={threadPullRequestsFixture}
+          showAllThreadPullRequests
+        />
+      </StoryRow>
+      <StoryRow
+        label="thread pull requests — expanded in place"
+        hint="the body expands inside the card like every sibling section, listing each PR in creation order with its full repository and no invented status"
+      >
+        <Row
+          pullRequest={pullRequestFixture}
+          section={uncommittedSection}
+          createdPullRequests={threadPullRequestsFixture}
+          showAllThreadPullRequests
+          initiallyExpandedSection="pullRequests"
+        />
+      </StoryRow>
+      <StoryRow
+        label="thread pull requests — no branch pull request"
+        hint="PRs opened in other repositories stay reachable even when nothing tracks the checked-out branch"
+      >
+        <Row
+          section={uncommittedSection}
+          createdPullRequests={threadPullRequestsFixture}
+          showAllThreadPullRequests
         />
       </StoryRow>
       <StoryRow

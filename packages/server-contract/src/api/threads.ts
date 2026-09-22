@@ -21,6 +21,7 @@ import {
   serviceTierSchema,
   startedOnBehalfOfSchema,
   threadCreateOriginSchema,
+  threadCreatedPullRequestSchema,
   threadOriginKindSchema,
   threadListEntrySchema,
   threadQueuedMessageSchema,
@@ -1074,4 +1075,13 @@ export const threadStoragePathListResponseSchema =
   });
 export type ThreadStoragePathListResponse = z.infer<
   typeof threadStoragePathListResponseSchema
+>;
+
+export const threadCreatedPullRequestsResponseSchema = z
+  .object({
+    pullRequests: z.array(threadCreatedPullRequestSchema),
+  })
+  .strict();
+export type ThreadCreatedPullRequestsResponse = z.infer<
+  typeof threadCreatedPullRequestsResponseSchema
 >;

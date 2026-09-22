@@ -19,6 +19,8 @@ function renderSection(overrides?: {
   onTelemetryEnabledChange?: (enabled: boolean) => void;
   managedBranchPrefix?: string;
   onManagedBranchPrefixChange?: (prefix: string) => void;
+  showAllThreadPullRequests?: boolean;
+  onShowAllThreadPullRequestsChange?: (enabled: boolean) => void;
 }) {
   return render(
     <>
@@ -38,10 +40,16 @@ function renderSection(overrides?: {
         onOpenLinksInAppBrowserChange={vi.fn()}
         onRewriteLocalhostLinksChange={vi.fn()}
         onRichTextEditingChange={vi.fn()}
+        onShowAllThreadPullRequestsChange={
+          overrides?.onShowAllThreadPullRequestsChange ?? vi.fn()
+        }
         onSteerActiveThreadOnEnterChange={vi.fn()}
         openLinksInAppBrowser={false}
         rewriteLocalhostLinks={false}
         richTextEditing={false}
+        showAllThreadPullRequests={
+          overrides?.showAllThreadPullRequests ?? false
+        }
         steerActiveThreadOnEnter={false}
       />
       <PrivacySettingsSection
@@ -131,6 +139,24 @@ describe("localhost link rewrite setting", () => {
     expect(screen.getByText("Links")).not.toBeNull();
     expect(screen.queryByText("Rewrite localhost links")).toBeNull();
   });
+});
+
+it("defaults the thread pull request preference to off and turns it on", () => {
+  const onChange = vi.fn();
+  renderSection({ onShowAllThreadPullRequestsChange: onChange });
+  const toggle = screen.getByRole("switch", {
+    name: "Show all pull requests from this thread",
+  });
+  expect(toggle.getAttribute("aria-checked")).toBe("false");
+  fireEvent.click(toggle);
+  expect(onChange).toHaveBeenCalledWith(true);
+  cleanup();
+  renderSection({ showAllThreadPullRequests: true });
+  expect(
+    screen
+      .getByRole("switch", { name: "Show all pull requests from this thread" })
+      .getAttribute("aria-checked"),
+  ).toBe("true");
 });
 
 it("shows the saved telemetry preference and allows opting out", () => {

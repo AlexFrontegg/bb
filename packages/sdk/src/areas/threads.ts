@@ -30,6 +30,7 @@ import type {
   ThreadArchiveAllResponse,
   ThreadChildSummaryResponse,
   ThreadConversationOutlineResponse,
+  ThreadCreatedPullRequestsResponse,
   ThreadCountGroupBy,
   ThreadCountQuery,
   ThreadCountResponse,
@@ -212,6 +213,7 @@ export type ThreadStoragePathsResult = ThreadStoragePathListResponse;
 export type ThreadChildSummaryResult = ThreadChildSummaryResponse;
 export type ThreadDefaultExecutionOptionsResult = ResolvedThreadExecutionOptions | null;
 export type ThreadConversationOutlineResult = ThreadConversationOutlineResponse;
+export type ThreadCreatedPullRequestsResult = ThreadCreatedPullRequestsResponse;
 export type ThreadTimelineTurnSummaryDetailsResult =
   TimelineTurnSummaryDetailsResponse;
 
@@ -558,6 +560,9 @@ export interface ThreadsArea {
     args: ThreadStatusArgs,
   ): Promise<ThreadConversationOutlineResult>;
   count(args?: ThreadCountArgs): Promise<ThreadCountResult>;
+  createdPullRequests(
+    args: ThreadStatusArgs,
+  ): Promise<ThreadCreatedPullRequestsResult>;
   defaultExecutionOptions(
     args: ThreadStatusArgs,
   ): Promise<ThreadDefaultExecutionOptionsResult>;
@@ -1120,6 +1125,14 @@ export function createThreadsArea(args: CreateSdkAreaArgs): ThreadsArea {
         transport.api.v1.threads.count.$get(
           { query: countQuery(input) },
           ...signalRequestArgs(input?.signal),
+        ),
+      );
+    },
+    async createdPullRequests(input) {
+      return transport.readJson(
+        transport.api.v1.threads[":id"]["created-pull-requests"].$get(
+          { param: { id: input.threadId } },
+          ...signalRequestArgs(input.signal),
         ),
       );
     },

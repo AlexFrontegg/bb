@@ -2129,6 +2129,32 @@ export function listStoredTurnCompletedRowsByTurnIds(
     .all();
 }
 
+export interface ListCompletedItemEventRowsByItemKindsArgs {
+  itemKinds: readonly ThreadEventItemType[];
+  threadId: string;
+}
+
+export function listCompletedItemEventRowsByItemKinds(
+  db: DbQueryConnection,
+  args: ListCompletedItemEventRowsByItemKindsArgs,
+): StoredEventRow[] {
+  if (args.itemKinds.length === 0) {
+    return [];
+  }
+  return db
+    .select(storedEventRowFields)
+    .from(events)
+    .where(
+      and(
+        eq(events.threadId, args.threadId),
+        eq(events.type, "item/completed"),
+        inArray(events.itemKind, [...args.itemKinds]),
+      ),
+    )
+    .orderBy(events.sequence)
+    .all();
+}
+
 export interface ListLatestBackgroundTaskStateRowsByItemIdsArgs {
   beforeSequence?: number;
   itemIds: readonly string[];

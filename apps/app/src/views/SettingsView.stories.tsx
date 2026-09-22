@@ -120,6 +120,8 @@ function useSettingsStoryState() {
   const [openLinksInAppBrowser, setOpenLinksInAppBrowser] = useState(false);
   const [rewriteLocalhostLinks, setRewriteLocalhostLinks] = useState(true);
   const [richTextEditing, setRichTextEditing] = useState(false);
+  const [showAllThreadPullRequests, setShowAllThreadPullRequests] =
+    useState(false);
   const [steerActiveThreadOnEnter, setSteerActiveThreadOnEnter] =
     useState(false);
   const [confirmThreadArchive, setConfirmThreadArchive] = useState(true);
@@ -149,6 +151,7 @@ function useSettingsStoryState() {
     preferredAudioInputDeviceId,
     rewriteLocalhostLinks,
     richTextEditing,
+    showAllThreadPullRequests,
     steerActiveThreadOnEnter,
     confirmThreadArchive,
     setConfirmThreadArchive,
@@ -166,6 +169,7 @@ function useSettingsStoryState() {
     setPreferredAudioInputDeviceId,
     setRewriteLocalhostLinks,
     setRichTextEditing,
+    setShowAllThreadPullRequests,
     setSteerActiveThreadOnEnter,
     setStreamerMode,
     setShowDiagnosticEvents,
@@ -213,10 +217,12 @@ function GeneralSettingsStory({
         onOpenLinksInAppBrowserChange={state.setOpenLinksInAppBrowser}
         onRewriteLocalhostLinksChange={state.setRewriteLocalhostLinks}
         onRichTextEditingChange={state.setRichTextEditing}
+        onShowAllThreadPullRequestsChange={state.setShowAllThreadPullRequests}
         onSteerActiveThreadOnEnterChange={state.setSteerActiveThreadOnEnter}
         openLinksInAppBrowser={state.openLinksInAppBrowser}
         rewriteLocalhostLinks={state.rewriteLocalhostLinks}
         richTextEditing={state.richTextEditing}
+        showAllThreadPullRequests={state.showAllThreadPullRequests}
         steerActiveThreadOnEnter={state.steerActiveThreadOnEnter}
       />
       <CliSkillsSettingsSectionContent

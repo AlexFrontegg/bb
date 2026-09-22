@@ -51,6 +51,7 @@ describe("general settings", () => {
           showKeyboardHints: false,
           allowFastServiceTier: false,
           steerActiveThreadOnEnter: true,
+          showAllThreadPullRequests: true,
           providerOrder: ["pi", "codex"],
           defaultProviderId: "pi",
         }),
@@ -68,6 +69,7 @@ describe("general settings", () => {
         showKeyboardHints: false,
         allowFastServiceTier: false,
         steerActiveThreadOnEnter: true,
+        showAllThreadPullRequests: true,
         providerOrder: ["pi", "codex"],
         defaultProviderId: "pi",
         showUnhandledProviderEvents: false,
@@ -77,6 +79,7 @@ describe("general settings", () => {
         showKeyboardHints: false,
         allowFastServiceTier: false,
         steerActiveThreadOnEnter: true,
+        showAllThreadPullRequests: true,
         providerOrder: ["pi", "codex"],
         defaultProviderId: "pi",
       });
@@ -91,6 +94,7 @@ describe("general settings", () => {
         showKeyboardHints: false,
         allowFastServiceTier: false,
         steerActiveThreadOnEnter: true,
+        showAllThreadPullRequests: true,
         providerOrder: ["pi", "codex"],
         defaultProviderId: "pi",
       });

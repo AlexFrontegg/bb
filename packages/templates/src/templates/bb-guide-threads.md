@@ -197,6 +197,7 @@ Sections:
 Inspecting:
 
   bb thread context [id]                   Show recorded context usage and available breakdown (--self, --json)
+  bb thread created-pull-requests [id]     List pull requests this thread's agent created (--self, --json)
   bb thread show [id]                      Show thread details and pull request status
     --self                                 Target current thread
     --work-status                          Include git working-tree status
@@ -463,6 +464,11 @@ starting a provider request. Use `--self` for the current thread and `--json` fo
 breakdown after turns and compaction when its SDK supports context inspection.
 A later aggregate-only measurement replaces any older breakdown. Other providers
 continue to expose their available totals.
+
+`bb thread created-pull-requests [id]` lists the pull requests the thread's agent
+opened, oldest first, as `{ pullRequests: [{ repo, number, url, seq }] }` under
+`--json`. It is derived from stored thread history, so it reflects what the agent
+did rather than the pull request attached to the thread's branch.
 
 Lifecycle ownership:
   spawn and fork accept --lifecycle-owner-thread <id>. SDK arguments use

@@ -308,6 +308,7 @@ export {
   getLatestThreadSequence,
   insertEvents,
   listActiveBackgroundTaskCountsByThreadIds,
+  listCompletedItemEventRowsByItemKinds,
   listContextWindowUsageRows,
   listEvents,
   listStoredConversationOutlineEventRows,

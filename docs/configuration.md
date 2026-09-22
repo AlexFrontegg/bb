@@ -336,6 +336,12 @@ preference applies to all connected app clients. Set it with
 `bb.sdk.system.updateGeneralSettings` using `confirmThreadArchive`.
 CLI and SDK archive operations remain non-interactive.
 
+The "Show all pull requests from this thread" toggle in Settings → General →
+Threads & editing lists every pull request the thread's agent created, in any
+repository, in the prompt box banner. It defaults to off, so the banner keeps
+showing only the pull request for the branch that is checked out. Set it with
+`bb settings general showAllThreadPullRequests <true|false>`.
+
 The "Streamer mode" toggle in Settings → General hides every `customModels`
 entry from `~/.bb/config.json` in all model lists: the web and mobile pickers,
 `bb provider models`, and `sdk.providers.models`. Turn it on before a screen

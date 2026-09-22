@@ -189,6 +189,8 @@ and no open terminals; empty machines can use an opted-in provider idle policy.
 
 `bb thread context` reads recorded context usage without sending a model request. A breakdown is optional; absent usage is returned as `null`.
 
+`bb thread created-pull-requests` lists the pull requests the thread's agent created, oldest first. It reads stored thread history, so it needs no network access and stays empty for threads that opened none.
+
 `bb machine reconcile <id-or-name> [--json]` asks core to enforce its recorded
 suspended state through the provider and waits for completion. It leaves active
 machines and in-progress lifecycle operations alone. Use `machine suspend` to

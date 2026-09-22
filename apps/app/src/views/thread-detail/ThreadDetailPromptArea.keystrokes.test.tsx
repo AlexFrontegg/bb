@@ -274,11 +274,16 @@ const queryMocks = vi.hoisted(() => ({
   queuedMessages: [] as ThreadQueuedMessage[],
 }));
 
+vi.mock("@/hooks/queries/system-queries", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/hooks/queries/system-queries")>()),
+  useSystemConfig: () => ({ data: undefined }),
+}));
 vi.mock("@/hooks/queries/thread-queries", () => ({
   getLatestPendingInteraction: (interactions: readonly PendingInteraction[]) =>
     interactions.at(-1) ?? null,
   useThreadPromptHistory: () => ({ data: [] }),
   useThreadQueuedMessages: () => ({ data: queryMocks.queuedMessages }),
+  useThreadCreatedPullRequests: () => ({ data: undefined }),
 }));
 
 const PROJECT_ID = "proj_keystrokes";

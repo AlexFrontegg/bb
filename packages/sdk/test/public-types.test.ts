@@ -401,6 +401,7 @@ type ExpectedThreadsKey =
   | "compact"
   | "conversationOutline"
   | "count"
+  | "createdPullRequests"
   | "defaultExecutionOptions"
   | "delete"
   | "editMessage"

@@ -19,6 +19,7 @@ import type {
   ThreadSearchResponse,
   ThreadWithIncludesResponse,
   ThreadConversationOutlineResponse,
+  ThreadCreatedPullRequestsResponse,
   ThreadStorageFileListResponse,
   ThreadStorageLocationResponse,
   ThreadStoragePathListResponse,
@@ -81,6 +82,7 @@ import {
   threadStorageFilePreviewQueryKey,
   threadHostFilePreviewQueryKey,
   threadConversationOutlineQueryKey,
+  threadCreatedPullRequestsQueryKey,
   threadTimelineQueryKey,
   threadTimelineTurnSummaryDetailsQueryKey,
   threadsQueryKey,
@@ -102,6 +104,7 @@ interface QueryOptions {
 export const THREAD_LIST_STALE_TIME_MS = 10_000;
 const THREAD_SEARCH_STALE_TIME_MS = 10_000;
 const THREAD_DETAIL_STALE_TIME_MS = 5_000;
+const THREAD_CREATED_PULL_REQUESTS_STALE_TIME_MS = 60_000;
 const THREAD_MENTION_CANDIDATE_LIMIT = 200;
 const THREAD_SEARCH_DEBOUNCE_MS = 150;
 export const THREAD_SEARCH_LIMIT_PER_GROUP = 20;
@@ -129,6 +132,8 @@ interface ThreadTimelineQueryOptions extends QueryOptions {
 }
 
 type ThreadConversationOutlineQueryOptions = QueryOptions;
+
+type ThreadCreatedPullRequestsQueryOptions = QueryOptions;
 
 type ThreadTimelineTurnSummaryDetailsQueryOptions = QueryOptions;
 
@@ -1039,6 +1044,26 @@ export function useThreadConversationOutline(
     ...(options?.staleTime === undefined
       ? {}
       : { staleTime: options.staleTime }),
+  });
+}
+
+export function useThreadCreatedPullRequests(
+  id: string,
+  options?: ThreadCreatedPullRequestsQueryOptions,
+) {
+  const enabled = (options?.enabled ?? true) && Boolean(id);
+  useThreadDetailRealtimeSubscription(id, { enabled });
+
+  return useQuery<ThreadCreatedPullRequestsResponse>({
+    queryKey: threadCreatedPullRequestsQueryKey(id),
+    queryFn: ({ signal }) =>
+      sdk.threads.createdPullRequests({
+        threadId: requireThreadId(id, "useThreadCreatedPullRequests"),
+        signal,
+      }),
+    enabled,
+    refetchOnMount: options?.refetchOnMount ?? true,
+    staleTime: options?.staleTime ?? THREAD_CREATED_PULL_REQUESTS_STALE_TIME_MS,
   });
 }
 
